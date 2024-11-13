@@ -711,6 +711,17 @@ SrsSslConnection::~SrsSslConnection()
     }
 }
 
+void keylog_callback(const SSL *ssl, const char *line) {
+    const char *filename = getenv("SSLKEYLOGFILE");
+    if (filename) {
+        FILE *f = fopen(filename, "a");
+        if (f) {
+            fprintf(f, "%s\n", line);
+            fclose(f);
+        }
+    }
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 srs_error_t SrsSslConnection::handshake(string key_file, string crt_file)
@@ -723,6 +734,7 @@ srs_error_t SrsSslConnection::handshake(string key_file, string crt_file)
 #else
     ssl_ctx = SSL_CTX_new(TLSv1_2_method());
 #endif
+    SSL_CTX_set_keylog_callback(ssl_ctx, keylog_callback);
     SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_NONE, NULL);
     srs_assert(SSL_CTX_set_cipher_list(ssl_ctx, "ALL") == 1);
 
