@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+#include "srs_kernel_log.hpp"
 #include <srs_app_rtc_api.hpp>
 
 #include <srs_app_rtc_conn.hpp>
@@ -377,7 +378,9 @@ srs_error_t SrsGoApiRtcPublish::do_serve_http(ISrsHttpResponseWriter* w, ISrsHtt
 
         SrsJsonAny* json = SrsJsonAny::loads(req_json);
         if (!json || !json->is_object()) {
-            return srs_error_new(ERROR_RTC_API_BODY, "invalid body %s", req_json.c_str());
+            return srs_error_new(ERROR_RTC_API_BODY, "invalid body =>%s<=", req_json.c_str());
+        }else{
+            srs_trace("=>%s<=",req_json.c_str());
         }
 
         req_raw = json->to_object();
@@ -468,6 +471,7 @@ srs_error_t SrsGoApiRtcPublish::do_serve_http(ISrsHttpResponseWriter* w, ISrsHtt
     res->set("server", SrsJsonAny::str(SrsStatistic::instance()->server_id().c_str()));
     res->set("service", SrsJsonAny::str(SrsStatistic::instance()->service_id().c_str()));
     res->set("pid", SrsJsonAny::str(SrsStatistic::instance()->service_pid().c_str()));
+    res->set("type", SrsJsonAny::str("answer"));
 
     // TODO: add candidates in response json?
     res->set("sdp", SrsJsonAny::str(ruc.local_sdp_str_.c_str()));
