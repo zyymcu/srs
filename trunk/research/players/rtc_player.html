@@ -49,6 +49,7 @@
         URL:
         <input type="text" id="txt_url" class="input-xxlarge" value="">
         <button class="btn btn-primary" id="btn_play">播放视频</button>
+        <button class="btn btn-primary" id="btn_stop">停止播放</button>
     </div>
 
     <label></label>
@@ -68,6 +69,14 @@
 <script type="text/javascript">
 $(function(){
     var sdk = null; // Global handler to do cleanup when replaying.
+    var stopPlay = function(){
+        if (sdk) {
+            sdk.close();
+        }
+        $('#rtc_media_player').hide();
+        $('#sessionid').html('');
+        $('#simulator-drop').removeAttr('href');
+    }
     var startPlay = function() {
         $('#rtc_media_player').show();
 
@@ -101,6 +110,10 @@ $(function(){
     $("#btn_play").click(function() {
         $('#rtc_media_player').prop('muted', false);
         startPlay();
+    });
+    $("#btn_stop").click(function() {
+        $('#rtc_media_player').prop('muted', true);
+        stopPlay();
     });
 
     if (query.autostart === 'true') {
