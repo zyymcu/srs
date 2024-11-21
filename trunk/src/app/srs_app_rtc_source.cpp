@@ -464,7 +464,11 @@ void SrsRtcSource::init_for_play_before_publishing()
         audio_track_desc->ssrc_ = audio_ssrc;
         audio_track_desc->direction_ = "recvonly";
 
+        #if 0
         audio_track_desc->media_ = new SrsAudioPayload(kAudioPayloadType, "opus", kAudioSamplerate, kAudioChannel);
+        #else
+        audio_track_desc->media_ = new SrsCodecPayload(8, "PCMA", 8000);
+        #endif
     }
 
     // video track description
@@ -777,6 +781,7 @@ std::vector<SrsRtcTrackDescription*> SrsRtcSource::get_track_desc(std::string ty
 
         string name = stream_desc_->audio_track_desc_->media_->name_;
         std::transform(name.begin(), name.end(), name.begin(), static_cast<int(*)(int)>(std::tolower));
+        std::transform(media_name.begin(), media_name.end(), media_name.begin(), static_cast<int(*)(int)>(std::tolower));
         if (name == media_name) {
             track_descs.push_back(stream_desc_->audio_track_desc_);
         }

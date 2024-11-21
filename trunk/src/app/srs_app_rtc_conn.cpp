@@ -2647,6 +2647,7 @@ srs_error_t SrsRtcConnection::negotiate_publish_capability(SrsRtcUserConfig* ruc
             ruc->audio_before_video_ = !nn_any_video_parsed;
 
             // TODO: check opus format specific param
+            #if 0
             std::vector<SrsMediaPayloadType> payloads = remote_media_desc.find_media_with_encoding_name("opus");
             if (payloads.empty()) {
                 return srs_error_new(ERROR_RTC_SDP_EXCHANGE, "no valid found opus payload type");
@@ -2680,6 +2681,20 @@ srs_error_t SrsRtcConnection::negotiate_publish_capability(SrsRtcUserConfig* ruc
                 // Only choose one match opus codec.
                 break;
             }
+            #else
+            std::vector<SrsMediaPayloadType> payloads = remote_media_desc.find_media_with_encoding_name("PCMA");
+            if (payloads.empty()) {
+                return srs_error_new(ERROR_RTC_SDP_EXCHANGE, "no valid found PCMA payload type");
+            }
+            for (int j = 0; j < (int)payloads.size(); j++) {
+                const SrsMediaPayloadType& payload = payloads.at(j);
+                SrsCodecPayload* audio_payload = new SrsCodecPayload(payload.payload_type_, payload.encoding_name_, payload.clock_rate_);
+                track_desc->type_ = "audio";
+                track_desc->set_codec_payload((SrsCodecPayload*)audio_payload);
+                break;
+            }
+
+            #endif
         } else if (remote_media_desc.is_video() && ruc->codec_ == "av1") {
             std::vector<SrsMediaPayloadType> payloads = remote_media_desc.find_media_with_encoding_name("AV1");
             if (payloads.empty()) {
@@ -3076,6 +3091,7 @@ srs_error_t SrsRtcConnection::negotiate_play_capability(SrsRtcUserConfig* ruc, s
             ruc->audio_before_video_ = !nn_any_video_parsed;
 
             // TODO: check opus format specific param
+            #if 0
             vector<SrsMediaPayloadType> payloads = remote_media_desc.find_media_with_encoding_name("opus");
             if (payloads.empty()) {
                 return srs_error_new(ERROR_RTC_SDP_EXCHANGE, "no valid found opus payload type");
@@ -3083,6 +3099,15 @@ srs_error_t SrsRtcConnection::negotiate_play_capability(SrsRtcUserConfig* ruc, s
 
             remote_payload = payloads.at(0);
             track_descs = source->get_track_desc("audio", "opus");
+            #else
+            vector<SrsMediaPayloadType> payloads = remote_media_desc.find_media_with_encoding_name("PCMA");
+            if (payloads.empty()) {
+                return srs_error_new(ERROR_RTC_SDP_EXCHANGE, "no valid found PCMA payload type");
+            }
+
+            remote_payload = payloads.at(0);
+            track_descs = source->get_track_desc("audio", "PCMA");
+            #endif
         } else if (remote_media_desc.is_video() && ruc->codec_ == "av1") {
             std::vector<SrsMediaPayloadType> payloads = remote_media_desc.find_media_with_encoding_name("AV1");
             if (payloads.empty()) {
@@ -3328,7 +3353,7 @@ srs_error_t SrsRtcConnection::generate_play_local_sdp_for_audio(SrsSdp& local_sd
             local_media_desc.payload_types_.push_back(red_payload->generate_media_payload_type());
         }
 
-        SrsAudioPayload* payload = (SrsAudioPayload*)audio_track->media_;
+        SrsCodecPayload* payload = audio_track->media_;
         local_media_desc.payload_types_.push_back(payload->generate_media_payload_type()); 
 
         //TODO: FIXME: add red, rtx, ulpfec..., payload_types_.
