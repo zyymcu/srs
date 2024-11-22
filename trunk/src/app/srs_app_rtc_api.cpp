@@ -149,12 +149,21 @@ srs_error_t SrsGoApiRtcPlay::do_serve_http(ISrsHttpResponseWriter* w, ISrsHttpMe
     // For client to specifies whether encrypt by SRTP.
     string srtp = r->query_get("encrypt");
     string dtls = r->query_get("dtls");
+    ruc.req_->ice_ufrag_ = r->query_get("ice-ufrag");
+    ruc.req_->ice_pwd_ = r->query_get("ice-pwd");
+    if (!ruc.req_->ice_ufrag_.empty() && (ruc.req_->ice_ufrag_.length() < SRS_ICE_UFRAG_MIN || ruc.req_->ice_ufrag_.length() > SRS_ICE_UFRAG_MAX)) {
+        return srs_error_new(ERROR_RTC_INVALID_ICE, "Invalid ice-ufrag %s", ruc.req_->ice_ufrag_.c_str());
+    }
+    if (!ruc.req_->ice_pwd_.empty() && (ruc.req_->ice_pwd_.length() < SRS_ICE_PWD_MIN || ruc.req_->ice_pwd_.length() > SRS_ICE_PWD_MAX)) {
+        return srs_error_new(ERROR_RTC_INVALID_ICE, "Invalid ice-pwd %s", ruc.req_->ice_pwd_.c_str());
+    }
+
 
     srs_trace(
-            "RTC play %s, api=%s, tid=%s, clientip=%s, app=%s, stream=%s, offer=%dB, eip=%s, codec=%s, srtp=%s, dtls=%s",
+            "RTC play %s, api=%s, tid=%s, clientip=%s, app=%s, stream=%s, offer=%dB, eip=%s, codec=%s, srtp=%s, dtls=%s, ufrag=%s, pwd=%s",
             streamurl.c_str(), api.c_str(), tid.c_str(), clientip.c_str(), ruc.req_->app.c_str(),
             ruc.req_->stream.c_str(), remote_sdp_str.length(),
-            eip.c_str(), codec.c_str(), srtp.c_str(), dtls.c_str()
+            eip.c_str(), codec.c_str(), srtp.c_str(), dtls.c_str(), ruc.req_->ice_ufrag_.c_str(),ruc.req_->ice_pwd_.c_str()
     );
 
     ruc.eip_ = eip;
@@ -447,9 +456,18 @@ srs_error_t SrsGoApiRtcPublish::do_serve_http(ISrsHttpResponseWriter* w, ISrsHtt
     }
     string codec = r->query_get("codec");
 
-    srs_trace("RTC publish %s, api=%s, tid=%s, clientip=%s, app=%s, stream=%s, offer=%dB, eip=%s, codec=%s",
+    ruc.req_->ice_ufrag_ = r->query_get("ice-ufrag");
+    ruc.req_->ice_pwd_ = r->query_get("ice-pwd");
+    if (!ruc.req_->ice_ufrag_.empty() && (ruc.req_->ice_ufrag_.length() < SRS_ICE_UFRAG_MIN || ruc.req_->ice_ufrag_.length() > SRS_ICE_UFRAG_MAX)) {
+        return srs_error_new(ERROR_RTC_INVALID_ICE, "Invalid ice-ufrag %s", ruc.req_->ice_ufrag_.c_str());
+    }
+    if (!ruc.req_->ice_pwd_.empty() && (ruc.req_->ice_pwd_.length() < SRS_ICE_PWD_MIN || ruc.req_->ice_pwd_.length() > SRS_ICE_PWD_MAX)) {
+        return srs_error_new(ERROR_RTC_INVALID_ICE, "Invalid ice-pwd %s", ruc.req_->ice_pwd_.c_str());
+    }
+
+    srs_trace("RTC publish %s, api=%s, tid=%s, clientip=%s, app=%s, stream=%s, offer=%dB, eip=%s, codec=%s, ufrag=%s, pwd=%s",
         streamurl.c_str(), api.c_str(), tid.c_str(), clientip.c_str(), ruc.req_->app.c_str(), ruc.req_->stream.c_str(),
-        remote_sdp_str.length(), eip.c_str(), codec.c_str()
+        remote_sdp_str.length(), eip.c_str(), codec.c_str(), ruc.req_->ice_ufrag_.c_str(),ruc.req_->ice_pwd_.c_str()
     );
 
     ruc.eip_ = eip;
